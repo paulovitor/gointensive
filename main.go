@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3" // foi preciso add _ porque não tem uma referência direta ao import
 	"github.com/paulovitor/gointensive/internal/entity"
@@ -73,7 +74,7 @@ func main() {
 	orderRepository := database.NewOrderRepository(db)
 	uc := usecase.NewCalculateFinalPrice(orderRepository)
 	input := usecase.OrderInput{
-		ID:    "123",
+		ID:    "1234",
 		Price: 10.0,
 		Tax:   1.0,
 	}
@@ -81,5 +82,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	println(output)
+	fmt.Println(output)
 }
