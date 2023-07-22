@@ -2,12 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3" // foi preciso add _ porque não tem uma referência direta ao import
 	"github.com/paulovitor/gointensive/internal/entity"
 	"github.com/paulovitor/gointensive/internal/infra/database"
 	"github.com/paulovitor/gointensive/internal/usecase"
+	"github.com/paulovitor/gointensive/pkg/rabbitmq"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Car struct { // similar a uma classe
@@ -74,14 +77,39 @@ func main() {
 	defer db.Close() // espera tudo rodar e depois executa o close
 	orderRepository := database.NewOrderRepository(db)
 	uc := usecase.NewCalculateFinalPrice(orderRepository)
-	input := usecase.OrderInput{
-		ID:    "1234",
-		Price: 10.0,
-		Tax:   1.0,
-	}
-	output, err := uc.Execute(input)
+	// input := usecase.OrderInput{
+	// 	ID:    "1234",
+	//	Price: 10.0,
+	//	Tax:   1.0,
+	// }
+	// output, err := uc.Execute(input)
+	// if err != nil {
+	//	panic(err)
+	// }
+	// fmt.Println(output)
+	ch, err := rabbitmq.OpenChannel()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(output)
+	defer ch.Close()
+	msgRabbitmqChannel := make(chan amqp.Delivery)
+	go rabbitmq.Consume(ch, msgRabbitmqChannel) // escutando a fila
+	rabbimqWorker(msgRabbitmqChannel, uc)
+}
+
+func rabbimqWorker(msgChan chan amqp.Delivery, uc *usecase.CalculateFinalPrice) {
+	fmt.Println("Starting rabbitmq")
+	for msg := range msgChan {
+		var input usecase.OrderInput
+		err := json.Unmarshal(msg.Body, &input) // muda o endereço na mémoria do input
+		if err != nil {
+			panic(err)
+		}
+		output, err := uc.Execute(input)
+		if err != nil {
+			panic(err)
+		}
+		msg.Ack(false)
+		fmt.Println("Messagem processada e salva no banco:", output)
+	}
 }
