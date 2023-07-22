@@ -22,6 +22,3 @@ go.work
 
 # Sqlite3
 db.*
-
-# Rabbitmq
-rabbitmq/
