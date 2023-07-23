@@ -8,13 +8,17 @@ services:
         - 5672:5672
         - 15672:15672
     volumes:
-        - ./rabbitmq/data/:/var/lib/rabbitmq
-        - ./rabbitmq/logs/:/var/log/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq/
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     networks:
         - rabbitmq_go_net
+
+volumes:
+    rabbitmq_data:
+    rabbitmq_log:
 
 networks:
   rabbitmq_go_net:
