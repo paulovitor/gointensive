@@ -1,0 +1,13 @@
+## Comandos docker
+
+docker build -t paulovitorbsb/gointensive:latest .
+
+docker run -p 8888:8888 paulovitorbsb/gointensive:latest
+
+docker images | grep paulovitorbsb/gointensive
+
+## Comandos k8s
+
+kubectl apply -f k8s 
+
+kubectl port-forward svc/goapp 8888:8888
